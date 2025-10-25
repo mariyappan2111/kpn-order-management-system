@@ -1,0 +1,92 @@
+<template>
+    <lightning-card title="Available Products" icon-name="standard:product">
+        <div class="slds-p-around_medium">
+            
+            <!-- Error Message -->
+            <template if:true={error}>
+                <div class="slds-text-color_error slds-m-bottom_small">
+                    {error}
+                </div>
+            </template>
+            
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading products..."></lightning-spinner>
+            </template>
+            
+            <!-- Products List -->
+            <template if:false={isLoading}>
+                <template if:true={hasProducts}>
+                    <div class="slds-grid slds-wrap slds-gutters_small">
+                        <template for:each={products} for:item="product">
+                            <div key={product.productId} class="slds-col slds-size_1-of-2">
+                                <article class="slds-card slds-m-bottom_small">
+                                    <div class="slds-card__body slds-card__body_inner">
+                                        <div class="slds-grid slds-grid_vertical-align-center">
+                                            <div class="slds-col slds-grow">
+                                                <h3 class="slds-text-heading_small slds-truncate" title={product.productName}>
+                                                    {product.productName}
+                                                    <template if:true={product.isInOrder}>
+                                                        <lightning-icon icon-name="utility:check" size="x-small" 
+                                                                       alternative-text="In Order" 
+                                                                       class="slds-m-left_x-small"
+                                                                       variant="success">
+                                                        </lightning-icon>
+                                                    </template>
+                                                </h3>
+                                                <p class="slds-text-body_regular">
+                                                    <lightning-formatted-number value={product.listPrice} 
+                                                                               format-style="currency" 
+                                                                               currency-code="EUR">
+                                                    </lightning-formatted-number>
+                                                </p>
+                                                <template if:true={product.isInOrder}>
+                                                    <p class="slds-text-color_weak slds-text-body_small">
+                                                        Qty: {product.quantity}
+                                                    </p>
+                                                </template>
+                                            </div>
+                                            <div class="slds-col slds-no-flex">
+                                                <lightning-button 
+                                                    variant="brand"
+                                                    label="Add"
+                                                    title="Add to Order"
+                                                    icon-name="utility:add"
+                                                    onclick={handleAddProduct}
+                                                    data-product-id={product.productId}
+                                                    data-product-name={product.productName}
+                                                    data-list-price={product.listPrice}
+                                                    data-quantity={product.quantity}
+                                                    data-pricebook-entry-id={product.pricebookEntryId}
+                                                    disabled={isOrderActivated}>
+                                                </lightning-button>
+                                                <lightning-button 
+                                                    variant="brand"
+                                                    label="Remove"
+                                                    title="Remove from Order"
+                                                    icon-name="utility:dash"
+                                                    onclick={handleRemoveProduct}
+                                                    data-pbe-id={product.pricebookEntryId}
+                                                    data-product-id={product.productId}
+                                                    data-product-name={product.productName}
+                                                    data-quantity={product.quantity}
+                                                    disabled={isOrderActivated}>
+                                                </lightning-button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                
+                <template if:false={hasProducts}>
+                    <div class="slds-text-align_center slds-text-color_weak slds-p-vertical_large">
+                        No products available for this order's pricebook.
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

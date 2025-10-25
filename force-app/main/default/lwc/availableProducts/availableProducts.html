@@ -1,0 +1,230 @@
+<template>
+    <lightning-card title="Available Products" icon-name="standard:product">
+       
+        <div slot="actions">
+            <lightning-badge label={productCountLabel} class="slds-m-right_small"></lightning-badge>
+        </div>
+
+        <div class="slds-p-around_medium">
+            <!-- Search and Filters -->
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <div class="slds-col slds-size_1-of-2">
+                    <lightning-input
+                        type="search"
+                        label="Search Products"
+                        placeholder="Search by name..."
+                        value={searchKey}
+                        onchange={handleSearch}
+                        variant="label-hidden">
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-4">
+                    <lightning-combobox
+                        label="Category"
+                        placeholder="All Categories"
+                        options={categoryOptions}
+                        value={selectedCategory}
+                        onchange={handleCategoryChange}
+                        variant="label-hidden">
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-4">
+                    <lightning-combobox
+                        label="Show"
+                        placeholder="All Products"
+                        options={filterOptions}
+                        value={selectedFilter}
+                        onchange={handleFilterChange}
+                        variant="label-hidden">
+                    </lightning-combobox>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
+                    <span class="slds-assistive-text">error</span>
+                    <lightning-icon icon-name="utility:error" alternative-text="error" size="x-small" variant="inverse"></lightning-icon>
+                    <h2>{error}</h2>
+                </div>
+            </template>
+
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-p-vertical_xx-large">
+                    <lightning-spinner alternative-text="Loading products..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Products List -->
+            <template if:false={isLoading}>
+                <template if:true={hasProducts}>
+                    <div class="product-grid" onscroll={handleScroll}>
+                        <template for:each={displayedProducts} for:item="product">
+                            <div key={product.productId} class="product-card-wrapper">
+                                <article class="slds-card product-card">
+                                    <div class="slds-card__body slds-card__body_inner">
+                                      
+                                        <div class="product-header">
+                                            <div class="product-icon-wrapper">
+                                                <lightning-icon 
+                                                    icon-name={product.iconName} 
+                                                    size="medium"
+                                                    alternative-text={product.category}>
+                                                </lightning-icon>
+                                            </div>
+                                            <template if:true={product.isInOrder}>
+                                                <div class="product-badge">
+                                                    <lightning-badge label="In Order" class="success-badge"></lightning-badge>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        
+                                        <div class="product-content">
+                                            <h3 class="slds-text-heading_small slds-truncate product-title" title={product.productName}>
+                                                {product.productName}
+                                            </h3>
+                                            
+                                            <template if:true={product.category}>
+                                                <p class="slds-text-body_small slds-text-color_weak category-text">
+                                                    {product.category}
+                                                </p>
+                                            </template>
+
+                                            <div class="product-price">
+                                                <lightning-formatted-number 
+                                                    value={product.listPrice} 
+                                                    format-style="currency" 
+                                                    currency-code="EUR"
+                                                    class="price-value">
+                                                </lightning-formatted-number>
+                                                <span class="price-period">/month</span>
+                                            </div>
+
+                                            <template if:true={product.description}>
+                                                <p class="slds-text-body_small slds-text-color_weak product-description">
+                                                    {product.description}
+                                                </p>
+                                            </template>
+
+                                          
+                                            <template if:true={product.isInOrder}>
+                                                <div class="quantity-display">
+                                                    <lightning-icon 
+                                                        icon-name="utility:layers" 
+                                                        size="xx-small"
+                                                        class="slds-m-right_xx-small">
+                                                    </lightning-icon>
+                                                    <span class="slds-text-body_small">
+                                                        Quantity: <strong>{product.quantity}</strong>
+                                                    </span>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                       
+                                        <div class="product-actions">
+                                            <lightning-button-group>
+                                                <lightning-button 
+                                                    variant="neutral"
+                                                    label="Add"
+                                                    icon-name="utility:add"
+                                                    onclick={handleAddProduct}
+                                                    data-product-id={product.productId}
+                                                    data-product-name={product.productName}
+                                                    data-list-price={product.listPrice}
+                                                    data-category={product.category}
+                                                    data-pricebook-entry-id={product.pricebookEntryId}
+                                                    disabled={isOrderActivated}
+                                                    class="action-button">
+                                                </lightning-button>
+                                                <lightning-button 
+                                                    variant="destructive-text"
+                                                    label="Remove"
+                                                    icon-name="utility:dash"
+                                                    onclick={handleRemoveProduct}
+                                                    data-product-id={product.productId}
+                                                    disabled={isOrderActivated}
+                                                    class="action-button">
+                                                </lightning-button>
+                                            </lightning-button-group>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        </template>
+                    </div>
+
+                    <template if:true={isLoadingMore}>
+                        <div class="slds-align_absolute-center slds-p-vertical_medium">
+                            <lightning-spinner alternative-text="Loading more products..." size="small"></lightning-spinner>
+                        </div>
+                    </template>
+
+                    <div class="slds-grid slds-grid_align-center slds-m-top_medium pagination-controls">
+                        <div class="slds-col">
+                            <div class="slds-grid slds-grid_vertical-align-center">
+                                <lightning-button 
+                                    icon-name="utility:chevronleft" 
+                                    variant="neutral"
+                                    onclick={handlePrevious}
+                                    disabled={isFirstPage}
+                                    class="slds-m-right_x-small">
+                                </lightning-button>
+                                
+                                <span class="slds-m-horizontal_small pagination-text">
+                                    Page {currentPage} of {totalPages}
+                                </span>
+                                
+                                <lightning-button 
+                                    icon-name="utility:chevronright" 
+                                    icon-position="right"
+                                    variant="neutral"
+                                    onclick={handleNext}
+                                    disabled={isLastPage}
+                                    class="slds-m-left_x-small">
+                                </lightning-button>
+
+                                <lightning-combobox
+                                    label="Items per page"
+                                    placeholder="Select page size"
+                                    options={pageSizeOptions}
+                                    value={pageSize}
+                                    onchange={handlePageSizeChange}
+                                    variant="label-hidden"
+                                    class="slds-m-left_medium page-size-selector">
+                                </lightning-combobox>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slds-text-align_center slds-text-color_weak slds-text-body_small slds-m-top_small">
+                        Showing {startRecord} - {endRecord} of {totalRecords} products
+                    </div>
+                </template>
+
+                <template if:false={hasProducts}>
+                    <div class="empty-state">
+                        <lightning-icon 
+                            icon-name="custom:custom19" 
+                            size="large"
+                            alternative-text="No products">
+                        </lightning-icon>
+                        <h3 class="slds-text-heading_small slds-m-top_medium">
+                            No Products Found
+                        </h3>
+                        <p class="slds-text-body_regular slds-text-color_weak slds-m-top_small">
+                            <template if:true={searchKey}>
+                                Try adjusting your search or filters.
+                            </template>
+                            <template if:false={searchKey}>
+                                No products available for this order's pricebook.
+                            </template>
+                        </p>
+                    </div>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

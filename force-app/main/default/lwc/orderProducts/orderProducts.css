@@ -1,0 +1,18 @@
+@media (max-width: 768px) {
+    .order-summary-section .slds-grid {
+        flex-direction: column;
+    }
+    
+    .summary-card {
+        margin-bottom: 0.5rem;
+    }
+    
+    .pagination-controls .slds-grid {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .order-total-card .slds-grid {
+        flex-direction: column;
+    }
+}
