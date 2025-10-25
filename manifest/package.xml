@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>KPN_IntegrationsBase</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>availableProducts</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>Open_ExternalAPI</members>
+        <name>NamedCredential</name>
+    </types>
+    <types>
+		<members>SwaggerHub</members>
+		<name>RemoteSiteSetting</name>
+	</types><types>
+		<members>Apex_Class_Permissions</members>
+		<name>PermissionSet</name>
+	</types>
+    <version>60.0</version>
+</Package>

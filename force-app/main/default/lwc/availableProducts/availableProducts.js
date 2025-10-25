@@ -324,4 +324,4 @@ export default class AvailableProducts extends LightningElement {
         });
         this.dispatchEvent(event);
     }
-} 
+}
