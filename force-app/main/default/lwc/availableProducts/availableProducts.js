@@ -67,7 +67,6 @@ export default class AvailableProducts extends LightningElement {
         }
     }
 
-    // Computed properties
     get hasProducts() {
         return this.displayedProducts && this.displayedProducts.length > 0;
     }
@@ -97,7 +96,6 @@ export default class AvailableProducts extends LightningElement {
         return this.currentPage === this.totalPages;
     }
 
-    // category options for filter dropdown from available product API
     get categoryOptions() {
         const categories = [...new Set(this.allProducts.map(p => p.category).filter(c => c))];
         return [
@@ -125,7 +123,6 @@ export default class AvailableProducts extends LightningElement {
         ];
     }
 
-    // Event Handlers
     handleSearch(event) {
         this.searchKey = event.target.value.toLowerCase();
         this.currentPage = 1;
@@ -170,7 +167,6 @@ export default class AvailableProducts extends LightningElement {
         const element = event.target;
         const scrollPercentage = (element.scrollTop + element.clientHeight) / element.scrollHeight;
 
-        // Load more when scrolled past threshold
         if (scrollPercentage > this.scrollThreshold && !this.isLoadingMore && !this.isLastPage) {
             this.loadMoreProducts();
         }
@@ -195,10 +191,7 @@ export default class AvailableProducts extends LightningElement {
         };
 
         publish(this.messageContext, ORDER_UPDATED_CHANNEL, message);
-
         this.showToast('Success', `${productPayload.productName} added to order`, 'success');
-
-        // Refresh product list to update "In Order" status
         this.refreshProducts();
     }
 
@@ -212,14 +205,10 @@ export default class AvailableProducts extends LightningElement {
         };
 
         publish(this.messageContext, ORDER_UPDATED_CHANNEL, message);
-
         this.showToast('Success', 'Product removed from order', 'success');
-
-        // Refresh product list
         this.refreshProducts();
     }
 
-    // Helper Methods
     applyFilters() {
         let filtered = [...this.allProducts];
 

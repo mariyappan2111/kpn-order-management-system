@@ -3,14 +3,10 @@ public with sharing class KPN_OrderControllerTest {
     
     @TestSetup
     static void setupData() {
-        // Get standard pricebook
         Id standardPb = Test.getStandardPricebookId();
-
-        // Create custom pricebook
         Pricebook2 customPb = new Pricebook2(Name='Test CustomPricebook', IsActive=true);
         insert customPb;
 
-        // Create products
         Product2 prod1 = new Product2(
             Name = 'Fiber 1 Gbps Home Bundle',
             ProductCode = 'PLAN001',
@@ -27,7 +23,6 @@ public with sharing class KPN_OrderControllerTest {
         );
         insert prod2;
 
-        // Create standard pricebook entries (required first)
         List<PricebookEntry> standardPBEs = new List<PricebookEntry>();
         standardPBEs.add(new PricebookEntry(
             Pricebook2Id = standardPb,
@@ -43,7 +38,6 @@ public with sharing class KPN_OrderControllerTest {
         ));
         insert standardPBEs;
 
-        // Create custom pricebook entries
         List<PricebookEntry> customPBEs = new List<PricebookEntry>();
         customPBEs.add(new PricebookEntry(
             Pricebook2Id = customPb.Id,
@@ -59,11 +53,9 @@ public with sharing class KPN_OrderControllerTest {
         ));
         insert customPBEs;
 
-        // Create account
         Account acc = new Account(Name='KPN NL Test Account');
         insert acc;
 
-        // Create order
         Order ord = new Order(
             AccountId = acc.Id,
             EffectiveDate = Date.today(),
@@ -75,11 +67,9 @@ public with sharing class KPN_OrderControllerTest {
 
     @IsTest
     static void testActivateOrder_WithSalesforceProduct() {
-        // Get test data
         Order ord = [SELECT Id, Pricebook2Id FROM Order LIMIT 1];
         Product2 prod = [SELECT Id, Name FROM Product2 WHERE ProductCode = 'PLAN001' LIMIT 1];
         
-        // Create wrapper for Salesforce product
         KPN_OrderController.OrderItemWrapper wrap = new KPN_OrderController.OrderItemWrapper();
         wrap.productId = prod.Id;
         wrap.productName = prod.Name;
@@ -92,12 +82,10 @@ public with sharing class KPN_OrderControllerTest {
         String result = KPN_OrderController.activateOrder(ord.Id, new List<KPN_OrderController.OrderItemWrapper>{wrap});
         Test.stopTest();
 
-        // Assertions
         System.assert(result.contains('successfully'), 'Activation should be successful');
         Order updatedOrd = [SELECT Status FROM Order WHERE Id = :ord.Id];
         System.assertEquals('Activated', updatedOrd.Status, 'Order status should be Activated');
         
-        // Verify OrderItem was created
         List<OrderItem> orderItems = [SELECT Id, Quantity, UnitPrice FROM OrderItem WHERE OrderId = :ord.Id];
         System.assertEquals(1, orderItems.size(), 'Should have 1 order item');
         System.assertEquals(2, orderItems[0].Quantity, 'Quantity should be 2');
@@ -105,10 +93,8 @@ public with sharing class KPN_OrderControllerTest {
 
     @IsTest
     static void testActivateOrder_WithAPIProduct() {
-        // Get test data
         Order ord = [SELECT Id, Pricebook2Id FROM Order LIMIT 1];
         
-        // Create wrapper for API product (no Salesforce productId)
         KPN_OrderController.OrderItemWrapper apiWrap = new KPN_OrderController.OrderItemWrapper();
         apiWrap.productId = 'prod_fiber_1gbps_bundle'; // External ID
         apiWrap.productName = 'External Fiber Bundle';
@@ -120,11 +106,8 @@ public with sharing class KPN_OrderControllerTest {
         Test.startTest();
         String result = KPN_OrderController.activateOrder(ord.Id, new List<KPN_OrderController.OrderItemWrapper>{apiWrap});
         Test.stopTest();
-
-        // Assertions
         System.assert(result.contains('successfully'), 'Activation should be successful');
         
-        // Verify new product was created
         List<Product2> newProducts = [SELECT Id, Name, ProductCode FROM Product2 WHERE Name = 'External Fiber Bundle'];
         System.assertEquals(1, newProducts.size(), 'New product should be created');
         System.assertEquals('prod_fiber_1gbps_bundle', newProducts[0].ProductCode, 'Product code should match');
@@ -132,13 +115,11 @@ public with sharing class KPN_OrderControllerTest {
 
     @IsTest
     static void testActivateOrder_MixedProducts() {
-        // Get test data
         Order ord = [SELECT Id, Pricebook2Id FROM Order LIMIT 1];
         Product2 sfProduct = [SELECT Id, Name FROM Product2 WHERE ProductCode = 'PLAN001' LIMIT 1];
         
         List<KPN_OrderController.OrderItemWrapper> products = new List<KPN_OrderController.OrderItemWrapper>();
         
-        // Salesforce product
         KPN_OrderController.OrderItemWrapper sfWrap = new KPN_OrderController.OrderItemWrapper();
         sfWrap.productId = sfProduct.Id;
         sfWrap.productName = sfProduct.Name;
@@ -148,7 +129,6 @@ public with sharing class KPN_OrderControllerTest {
         sfWrap.category = 'Broadband';
         products.add(sfWrap);
         
-        // API product
         KPN_OrderController.OrderItemWrapper apiWrap = new KPN_OrderController.OrderItemWrapper();
         apiWrap.productId = 'prod_mobile_unlimited';
         apiWrap.productName = 'API Mobile Plan';
@@ -162,7 +142,6 @@ public with sharing class KPN_OrderControllerTest {
         String result = KPN_OrderController.activateOrder(ord.Id, products);
         Test.stopTest();
 
-        // Assertions
         System.assert(result.contains('successfully'), 'Activation should be successful');
         List<OrderItem> orderItems = [SELECT Id FROM OrderItem WHERE OrderId = :ord.Id];
         System.assertEquals(2, orderItems.size(), 'Should have 2 order items');
@@ -170,11 +149,9 @@ public with sharing class KPN_OrderControllerTest {
 
     @IsTest
     static void testGetOrderItems_WithSalesforceProducts() {
-        // Get test data
         Order ord = [SELECT Id FROM Order LIMIT 1];
         PricebookEntry pbe = [SELECT Id, Product2Id FROM PricebookEntry WHERE Pricebook2.IsStandard = false LIMIT 1];
         
-        // Create order item
         OrderItem oi = new OrderItem(
             OrderId = ord.Id,
             PricebookEntryId = pbe.Id,
@@ -184,14 +161,12 @@ public with sharing class KPN_OrderControllerTest {
         );
         insert oi;
 
-        // Setup mock for API call
         Test.setMock(HttpCalloutMock.class, new KPN_OrderServiceMock());
 
         Test.startTest();
         List<KPN_OrderController.OrderItemWrapper> items = KPN_OrderController.getOrderItems(ord.Id);
         Test.stopTest();
 
-        // Assertions
         System.assert(items.size() > 0, 'Should return order items');
         System.assertNotEquals(null, items[0].productName, 'Product name should not be null');
     }
@@ -258,7 +233,6 @@ public with sharing class KPN_OrderControllerTest {
         String result = KPN_OrderController.activateOrderAPI(ord.Id);
         Test.stopTest();
 
-        // Assertions
         System.assert(result.contains('successfully'), 'Should activate successfully');
         Order updatedOrd = [SELECT Status FROM Order WHERE Id = :ord.Id];
         System.assertEquals('Activated', updatedOrd.Status, 'Order status should be Activated');

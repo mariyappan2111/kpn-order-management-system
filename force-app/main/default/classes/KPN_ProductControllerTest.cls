@@ -1,4 +1,4 @@
-@IsTest
+@IsTest(SeeAllData=false)
 public with sharing class KPN_ProductControllerTest {
     @TestSetup
     static void setupData() {

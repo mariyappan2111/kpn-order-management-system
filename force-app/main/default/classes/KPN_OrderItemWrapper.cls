@@ -1,6 +1,5 @@
 public with sharing class KPN_OrderItemWrapper {
 
-    // ---------- Nested Classes ----------
     public class PhoneNumber {
         public String countryCode;
         public String phnumber;
@@ -114,7 +113,6 @@ public with sharing class KPN_OrderItemWrapper {
         public String issue;
     }
 
-    // ---------- Helper Deserialization ----------
     public static OrderListResponse parseListResponse(String jsonStr) {
         return (OrderListResponse) JSON.deserialize(jsonStr, OrderListResponse.class);
     }

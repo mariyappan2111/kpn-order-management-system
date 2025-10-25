@@ -15,7 +15,7 @@ public with sharing class KPN_OrderController {
             if (externalOrder != null && externalOrder.orderItems != null) {
                 for (KPN_OrderItemWrapper.OrderItemDetail detail : externalOrder.orderItems) {
                     OrderItemWrapper item = new OrderItemWrapper();
-                    item.orderItemId = null; // Not yet inserted in Salesforce
+                    item.orderItemId = null; 
                     item.productName = detail.productName;
                     item.unitPrice = detail.unitPrice;
                     item.quantity = detail.quantity;
@@ -111,10 +111,14 @@ public with sharing class KPN_OrderController {
                 
                 // Check if product already exists in Salesforce (productId starts with '01t')
                 if (product.productId != null && product.productId.startsWith('01t')) {
-                    // Product exists in Salesforce - will handle via PricebookEntry
+                   // OrderItemWrapper existingProduct = new OrderItemWrapper();
+                   // existingProduct.productId = product.productId;
+                   // existingProduct.productName = product.productName;
+                   // existingProduct.unitPrice = product.unitPrice;
+                   // existingProduct.quantity = product.quantity;
+                   // existingProduct.totalPrice = product.totalPrice;
                     System.debug('Existing product: ' + product.productId);
                 } else {
-                    
                     Product2 newProduct = new Product2(
                         Name = product.productName,
                         ProductCode = product.productId,
@@ -242,11 +246,9 @@ public with sharing class KPN_OrderController {
                 if (apiProduct == null) continue;
                 
                 PricebookEntry matchingPBE = null;
-                
                 if (apiProduct.productId != null && apiProduct.productId.startsWith('01t')) {
                     matchingPBE = productIdToPBEMap.get(apiProduct.productId);
                 }
-                
                 if (matchingPBE == null && apiProduct.productId != null) {
                     matchingPBE = productCodeToPBEMap.get(apiProduct.productId);
                 }
@@ -254,12 +256,10 @@ public with sharing class KPN_OrderController {
                 if (matchingPBE == null && apiProduct.productName != null) {
                     matchingPBE = productNameToPBEMap.get(apiProduct.productName);
                 }
-                
                 if (matchingPBE == null) {
                     System.debug('WARNING: No PricebookEntry found for product: ' + apiProduct);
                     continue;
                 }
-                
                 Decimal quantity = (apiProduct.quantity != null && apiProduct.quantity > 0) ? apiProduct.quantity : 1;
                 Decimal unitPrice = (apiProduct.unitPrice != null && apiProduct.unitPrice > 0) ? apiProduct.unitPrice : matchingPBE.UnitPrice;
                 
@@ -274,13 +274,11 @@ public with sharing class KPN_OrderController {
             }
             
             System.debug('OrderItems to insert: ' + orderItemsToInsert);
-            
             if (!orderItemsToInsert.isEmpty()) {
                 insert orderItemsToInsert;
             } else {
                 throw new AuraHandledException('No valid products found to add to the order.');
             }
-            
             // Activate the Order
             ord.Status = 'Activated';
             update ord;
