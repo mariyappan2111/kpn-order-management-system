@@ -1,0 +1,343 @@
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/go2clouds/product/1.0.0
+info:
+  description: This is a simple API
+  version: "1.0.0"
+  title: Simple Product API
+  contact:
+    email: MariyappanSivathanu@gmail.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: admins
+    description: Secured Admin-only calls
+  - name: developers
+    description: Operations available to regular developers
+paths:
+  /products:
+    get:
+      summary: Retrieve all available products and bundles
+      operationId: getProducts
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum: [MOBILE, BROADBAND, ADDON, TV]
+          description: Filter products by category
+        - in: query
+          name: active
+          schema:
+            type: boolean
+            default: true
+          description: Whether to include only active products
+      responses:
+        '200':
+          description: A list of available products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+              examples:
+                sample:
+                  summary: Products by categories
+                  value:
+                    - id: PROD-1001
+                      name: "Unlimited 5G Mobile Plan"
+                      category: MOBILE
+                      description: "Unlimited data, calls, and texts nationwide."
+                      price: 44.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1002
+                      name: "Basic 5G Mobile Plan"
+                      category: MOBILE
+                      description: "10GB data, 500 minutes, 100 SMS."
+                      price: 19.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1003
+                      name: "Premium 5G Mobile Plan"
+                      category: MOBILE
+                      description: "100GB data, unlimited calls and SMS."
+                      price: 59.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1004
+                      name: "International Roaming Pack"
+                      category: ADDON
+                      description: "1GB of data and 100 minutes abroad."
+                      price: 14.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1005
+                      name: "Extra Data 5GB Add-on"
+                      category: ADDON
+                      description: "Additional 5GB monthly data."
+                      price: 9.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1006
+                      name: "Wi-Fi 6 Router"
+                      category: BROADBAND
+                      description: "High-performance router for fiber connections."
+                      price: 79.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1007
+                      name: "Fiber 100Mbps Plan"
+                      category: BROADBAND
+                      description: "Fast broadband connection for small households."
+                      price: 29.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1008
+                      name: "Fiber 500Mbps Plan"
+                      category: BROADBAND
+                      description: "Mid-tier broadband package with router."
+                      price: 39.99
+                      currencytype: "EUR"
+                      isBundle: true
+                      components:
+                        - id: CMP-001
+                          name: "Wi-Fi 6 Router"
+                          type: HARDWARE
+                          included: true
+                    - id: PROD-1009
+                      name: "Fiber 1Gbps Premium Bundle"
+                      category: BROADBAND
+                      description: "Includes router and Wi-Fi extender for maximum coverage."
+                      price: 59.99
+                      currencytype: "EUR"
+                      isBundle: true
+                      components:
+                        - id: CMP-001
+                          name: "Wi-Fi 6 Router"
+                          type: HARDWARE
+                          included: true
+                        - id: CMP-002
+                          name: "Wi-Fi Extender"
+                          type: HARDWARE
+                          included: true
+                    - id: PROD-1010
+                      name: "Home Security Add-on"
+                      category: ADDON
+                      description: "Smart camera and monitoring subscription."
+                      price: 15.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1011
+                      name: "TV Streaming Bundle"
+                      category: BROADBAND
+                      description: "Includes broadband + TV + streaming apps."
+                      price: 69.99
+                      currencytype: "EUR"
+                      isBundle: true
+                      components:
+                        - id: CMP-003
+                          name: "Smart TV Box"
+                          type: HARDWARE
+                          included: true
+                        - id: CMP-004
+                          name: "Netflix Premium Access"
+                          type: SERVICE
+                          included: true
+                    - id: PROD-1012
+                      name: "Roaming Unlimited Add-on"
+                      category: ADDON
+                      description: "Unlimited roaming in EU countries."
+                      price: 24.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1013
+                      name: "Business Fiber 2Gbps"
+                      category: BROADBAND
+                      description: "High-speed internet for small offices."
+                      price: 99.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1014
+                      name: "Mobile Family Pack"
+                      category: MOBILE
+                      description: "4 SIMs, shared 200GB data, unlimited calls."
+                      price: 119.99
+                      currencytype: "EUR"
+                      isBundle: true
+                    - id: PROD-1015
+                      name: "Kids Safe Mobile Plan"
+                      category: MOBILE
+                      description: "2GB data, parental controls included."
+                      price: 9.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1016
+                      name: "Senior 4G Plan"
+                      category: MOBILE
+                      description: "Unlimited calls, simplified phone setup."
+                      price: 14.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1017
+                      name: "Fiber + Mobile Combo"
+                      category: BROADBAND
+                      description: "Includes broadband and one mobile SIM."
+                      price: 79.99
+                      currencytype: "EUR"
+                      isBundle: true
+                    - id: PROD-1018
+                      name: "Cloud Storage Add-on"
+                      category: ADDON
+                      description: "1TB of secure cloud storage."
+                      price: 4.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1019
+                      name: "VoIP Home Phone Add-on"
+                      category: ADDON
+                      description: "Unlimited landline calls."
+                      price: 6.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1020
+                      name: "Wi-Fi Extender"
+                      category: ADDON
+                      description: "Boosts signal strength for large homes."
+                      price: 39.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1021
+                      name: "Smart Home Hub"
+                      category: ADDON
+                      description: "Controls connected smart devices."
+                      price: 89.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1022
+                      name: "Unlimited 4G Business Plan"
+                      category: MOBILE
+                      description: "Unlimited data and calls for enterprise users."
+                      price: 69.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1023
+                      name: "Streaming Data Pass"
+                      category: ADDON
+                      description: "Unlimited streaming on selected apps."
+                      price: 12.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1024
+                      name: "Broadband Lite 50Mbps"
+                      category: BROADBAND
+                      description: "Affordable 50Mbps internet connection."
+                      price: 19.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1025
+                      name: "Gaming Internet Bundle"
+                      category: BROADBAND
+                      description: "Optimized for gaming with low latency."
+                      price: 79.99
+                      currencytype: "EUR"
+                      isBundle: true
+                    - id: PROD-1026
+                      name: "Smartwatch SIM Add-on"
+                      category: ADDON
+                      description: "Extra SIM for smartwatches."
+                      price: 4.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1027
+                      name: "Home Automation Bundle"
+                      category: ADDON
+                      description: "Includes smart plugs, bulbs, and sensors."
+                      price: 99.99
+                      currencytype: "EUR"
+                      isBundle: true
+                    - id: PROD-1028
+                      name: "Fiber Business 5Gbps"
+                      category: BROADBAND
+                      description: "Enterprise-grade connection for offices."
+                      price: 249.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1029
+                      name: "Student Mobile Plan"
+                      category: MOBILE
+                      description: "Special 50GB data and social media access."
+                      price: 14.99
+                      currencytype: "EUR"
+                      isBundle: false
+                    - id: PROD-1030
+                      name: "Weekend Unlimited Data Add-on"
+                      category: ADDON
+                      description: "Unlimited data during weekends."
+                      price: 7.99
+                      currencytype: "EUR"
+                      isBundle: false
+  /products/categories:
+    get:
+      summary: Get list of product categories
+      operationId: getProductCategories
+      responses:
+        '200':
+          description: Available product categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  example: MOBILE
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+          enum: [MOBILE, BROADBAND, ADDON]
+        description:
+          type: string
+        price:
+          type: number
+          format: double
+        currencytype:
+          type: string
+        isBundle:
+          type: boolean
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductComponent'
+        eligibility:
+          type: object
+          properties:
+            minTenureMonths:
+              type: integer
+            requiresAddressValidation:
+              type: boolean
+            serviceAvailabilityArea:
+              type: string
+    ProductComponent:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        included:
+          type: boolean

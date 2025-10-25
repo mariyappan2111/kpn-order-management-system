@@ -1,0 +1,986 @@
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/go2clouds/Orders/1.0.0
+info:
+  description: This is an Order API
+  version: "1.0.0"
+  title: Simple Order API
+  contact:
+    email: MariyappanSivathanu@gmail.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: admins
+    description: Secured Admin-only calls
+  - name: developers
+    description: Operations available to regular developers
+
+paths:
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: List all orders
+      description: |
+        Retrieve a paginated list of all orders. Supports filtering by customer ID and order status.
+      operationId: listOrders
+      parameters:
+        - name: customerId
+          in: query
+          description: Filter orders by customer ID
+          required: false
+          schema:
+            type: string
+          example: "cust_existing_12345"
+        - name: status
+          in: query
+          description: Filter orders by status
+          required: false
+          schema:
+            type: string
+            enum: [pending, confirmed, processing, shipped, delivered, installed, cancelled, failed]
+          example: "confirmed"
+        - name: limit
+          in: query
+          description: Maximum number of orders to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of orders to skip for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Successfully retrieved order list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrderSummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              examples:
+                threeOrders:
+                  summary: List of three sample orders
+                  value:
+                    orders:
+                      - orderId: "ord_2025_123456"
+                        orderNumber: "ORD-2025-123456"
+                        status: "confirmed"
+                        customerId: "cust_existing_12345"
+                        customerName: "Sarah Johnson"
+                        totalAmount: 539.92
+                        orderDate: "2025-10-23T10:30:00Z"
+                        scheduledDeliveryDate: "2025-11-20"
+                      - orderId: "ord_2025_123457"
+                        orderNumber: "ORD-2025-123457"
+                        status: "shipped"
+                        customerId: "new_customer"
+                        customerName: "John Doe"
+                        totalAmount: 149.98
+                        orderDate: "2025-10-22T14:15:00Z"
+                        scheduledDeliveryDate: "2025-11-15"
+                      - orderId: "ord_2025_123458"
+                        orderNumber: "ORD-2025-123458"
+                        status: "delivered"
+                        customerId: "cust_789456123"
+                        customerName: "Michael Chen"
+                        totalAmount: 319.96
+                        orderDate: "2025-10-20T09:45:00Z"
+                        scheduledDeliveryDate: "2025-11-18"
+                    pagination:
+                      total: 3
+                      limit: 20
+                      offset: 0
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    
+    post:
+      tags:
+        - Orders
+      summary: Create a new order
+      description: |
+        Create a new order for one or more telecom products. The order must include:
+        - Complete customer information for identification and contact
+        - One or more products with quantities and customizations
+        - Delivery address and preferences
+        - All details necessary for order fulfillment without additional customer contact
+        
+        **Multiple Products:**
+        Orders can contain multiple products of different types:
+        - Mobile plans (multiple lines)
+        - Broadband packages (internet bundles)
+        - Add-on services (equipment, streaming, etc.)
+        
+        Each product can have individual quantities and product-specific customizations.
+      operationId: createOrder
+      requestBody:
+        required: true
+        description: Complete order information
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+            examples:
+              singleBroadbandOrder:
+                summary: Single broadband bundle order
+                description: Order for fiber internet bundle with installation
+                value:
+                  customer:
+                    customerId: "new_customer"
+                    firstName: "John"
+                    lastName: "Doe"
+                    email: "john.doe@example.com"
+                    phone:
+                      countryCode: "+1"
+                      number: "5551234567"
+                    alternatePhone:
+                      countryCode: "+1"
+                      number: "5559876543"
+                    dateOfBirth: "1985-06-15"
+                    identificationType: "drivers_license"
+                    identificationNumber: "D1234567"
+                  orderItems:
+                    - productId: "prod_fiber_1gbps_bundle"
+                      quantity: 1
+                      customizations:
+                        staticIPAddress: false
+                        managedWiFi: true
+                  deliveryAddress:
+                    addressLine1: "123 Main Street"
+                    addressLine2: "Apt 4B"
+                    city: "Springfield"
+                    stateProvince: "IL"
+                    postalCode: "62701"
+                    country: "US"
+                    deliveryInstructions: "Ring doorbell twice, call if no answer"
+                  billingAddress:
+                    addressLine1: "123 Main Street"
+                    addressLine2: "Apt 4B"
+                    city: "Springfield"
+                    stateProvince: "IL"
+                    postalCode: "62701"
+                    country: "US"
+                  preferredDeliveryDate: "2025-11-15"
+                  preferredTimeSlot: "morning"
+                  installationRequired: true
+                  notes: "Please schedule installation after equipment delivery"
+
+              multipleProductsOrder:
+                summary: Multiple products order (complete bundle)
+                description: Order with broadband, mobile lines, equipment, and streaming service
+                value:
+                  customer:
+                    customerId: "cust_existing_12345"
+                    firstName: "Sarah"
+                    lastName: "Johnson"
+                    email: "sarah.j@example.com"
+                    phone:
+                      countryCode: "+1"
+                      number: "5552223333"
+                    alternatePhone:
+                      countryCode: "+1"
+                      number: "5554445555"
+                    dateOfBirth: "1990-03-22"
+                    identificationType: "passport"
+                    identificationNumber: "P9876543"
+                  orderItems:
+                    - productId: "prod_fiber_1gbps_bundle"
+                      quantity: 1
+                      customizations:
+                        staticIPAddress: true
+                        managedWiFi: true
+                    - productId: "prod_mobile_unlimited_5g"
+                      quantity: 3
+                      customizations:
+                        phoneNumbers:
+                          - "5551111111"
+                          - "5552222222"
+                          - "5553333333"
+                        numberPorting: true
+                        previousCarrier: "OldTelecom Inc"
+                        accountNumber: "ACC-9876543"
+                    - productId: "prod_addon_mesh_extender"
+                      quantity: 2
+                    - productId: "prod_addon_streaming_premium"
+                      quantity: 1
+                      customizations:
+                        serviceTier: "premium"
+                        autoRenew: true
+                  deliveryAddress:
+                    addressLine1: "456 Oak Avenue"
+                    city: "Portland"
+                    stateProvince: "OR"
+                    postalCode: "97201"
+                    country: "US"
+                    deliveryInstructions: "Leave with front desk if not home. Building code: 1234"
+                  billingAddress:
+                    addressLine1: "PO Box 789"
+                    city: "Portland"
+                    stateProvince: "OR"
+                    postalCode: "97202"
+                    country: "US"
+                  preferredDeliveryDate: "2025-11-20"
+                  preferredTimeSlot: "afternoon"
+                  installationRequired: true
+                  notes: "Upgrading from existing service. Keep same account number if possible."
+
+              familyMobilePlan:
+                summary: Family mobile plan with multiple lines
+                description: Order for family plan with 4 mobile lines
+                value:
+                  customer:
+                    customerId: "cust_789456123"
+                    firstName: "Michael"
+                    lastName: "Chen"
+                    email: "m.chen@example.com"
+                    phone:
+                      countryCode: "+1"
+                      number: "5556667777"
+                    dateOfBirth: "1982-09-10"
+                    identificationType: "state_id"
+                    identificationNumber: "S7654321"
+                  orderItems:
+                    - productId: "prod_mobile_family_unlimited"
+                      quantity: 4
+                      customizations:
+                        phoneNumbers:
+                          - "5551231234"
+                          - "5552342345"
+                          - "5553453456"
+                          - "5554564567"
+                        dataSharing: true
+                        primaryLine: "5551231234"
+                        deviceProtection: true
+                  deliveryAddress:
+                    addressLine1: "789 Pine Boulevard"
+                    addressLine2: "Unit 15"
+                    city: "Austin"
+                    stateProvince: "TX"
+                    postalCode: "78701"
+                    country: "US"
+                    deliveryInstructions: "Resident manager can accept delivery"
+                  preferredDeliveryDate: "2025-11-18"
+                  preferredTimeSlot: "anytime"
+                  installationRequired: false
+
+      responses:
+        '201':
+          description: Order created successfully
+          headers:
+            Location:
+              description: URL to retrieve the created order
+              schema:
+                type: string
+              example: "/orders/ord_2025_123456"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              examples:
+                multipleProductsResponse:
+                  summary: Response for multiple products order
+                  value:
+                    orderId: "ord_2025_123456"
+                    orderNumber: "ORD-2025-123456"
+                    status: "confirmed"
+                    customer:
+                      customerId: "cust_existing_12345"
+                      firstName: "Sarah"
+                      lastName: "Johnson"
+                      email: "sarah.j@example.com"
+                      phone:
+                        countryCode: "+1"
+                        number: "5552223333"
+                      dateOfBirth: "1990-03-22"
+                      identificationType: "passport"
+                      identificationNumber: "P9876543"
+                    orderItems:
+                      - productId: "prod_fiber_1gbps_bundle"
+                        quantity: 1
+                        productName: "Fiber 1 Gbps Home Bundle"
+                        unitPrice: 99.99
+                        totalPrice: 99.99
+                        customizations:
+                          staticIPAddress: true
+                          managedWiFi: true
+                      - productId: "prod_mobile_unlimited_5g"
+                        quantity: 3
+                        productName: "Unlimited 5G Mobile Plan"
+                        unitPrice: 79.99
+                        totalPrice: 239.97
+                        customizations:
+                          phoneNumbers:
+                            - "5551111111"
+                            - "5552222222"
+                            - "5553333333"
+                          numberPorting: true
+                      - productId: "prod_addon_mesh_extender"
+                        quantity: 2
+                        productName: "Mesh WiFi Extender"
+                        unitPrice: 49.99
+                        totalPrice: 99.98
+                      - productId: "prod_addon_streaming_premium"
+                        quantity: 1
+                        productName: "Premium Streaming Package"
+                        unitPrice: 29.99
+                        totalPrice: 29.99
+                    deliveryAddress:
+                      addressLine1: "456 Oak Avenue"
+                      city: "Portland"
+                      stateProvince: "OR"
+                      postalCode: "97201"
+                      country: "US"
+                      deliveryInstructions: "Leave with front desk if not home. Building code: 1234"
+                    billingAddress:
+                      addressLine1: "PO Box 789"
+                      city: "Portland"
+                      stateProvince: "OR"
+                      postalCode: "97202"
+                      country: "US"
+                    scheduledDeliveryDate: "2025-11-20"
+                    deliveryTimeSlot: "afternoon"
+                    installationScheduled: true
+                    installationDateTime: "2025-11-20T14:00:00Z"
+                    totalAmount: 539.92
+                    breakdown:
+                      subtotal: 469.93
+                      setupFees: 49.99
+                      taxes: 40.00
+                      discounts: -20.00
+                      shippingFee: 0.00
+                      total: 539.92
+                    trackingNumber: "TRK20251023001"
+                    estimatedActivationDate: "2025-11-21"
+                    createdAt: "2025-10-23T10:30:00Z"
+                    updatedAt: "2025-10-23T10:30:00Z"
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Retrieve order details
+      description: |
+        Get complete information about a specific order including:
+        - Current order status
+        - Customer information
+        - All ordered products
+        - Delivery and installation schedules
+        - Tracking information
+        - Price breakdown
+      operationId: getOrderById
+      parameters:
+        - name: orderId
+          in: path
+          description: Unique identifier of the order
+          required: true
+          schema:
+            type: string
+          example: "ord_2025_123456"
+      responses:
+        '200':
+          description: Successfully retrieved order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              example:
+                orderId: "ord_2025_123456"
+                orderNumber: "ORD-2025-123456"
+                status: "shipped"
+                customer:
+                  customerId: "cust_existing_12345"
+                  firstName: "Sarah"
+                  lastName: "Johnson"
+                  email: "sarah.j@example.com"
+                  phone:
+                    countryCode: "+1"
+                    number: "5552223333"
+                orderItems:
+                  - productId: "prod_fiber_1gbps_bundle"
+                    quantity: 1
+                    productName: "Fiber 1 Gbps Home Bundle"
+                    unitPrice: 99.99
+                    totalPrice: 99.99
+                  - productId: "prod_mobile_unlimited_5g"
+                    quantity: 3
+                    productName: "Unlimited 5G Mobile Plan"
+                    unitPrice: 79.99
+                    totalPrice: 239.97
+                deliveryAddress:
+                  addressLine1: "456 Oak Avenue"
+                  city: "Portland"
+                  stateProvince: "OR"
+                  postalCode: "97201"
+                  country: "US"
+                scheduledDeliveryDate: "2025-11-20"
+                deliveryTimeSlot: "afternoon"
+                installationScheduled: true
+                installationDateTime: "2025-11-20T14:00:00Z"
+                totalAmount: 539.92
+                breakdown:
+                  subtotal: 469.93
+                  setupFees: 49.99
+                  taxes: 40.00
+                  discounts: -20.00
+                  shippingFee: 0.00
+                  total: 539.92
+                trackingNumber: "TRK20251023001"
+                estimatedActivationDate: "2025-11-21"
+                createdAt: "2025-10-23T10:30:00Z"
+                updatedAt: "2025-10-23T15:45:00Z"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required:
+        - customer
+        - orderItems
+        - deliveryAddress
+      properties:
+        customer:
+          allOf:
+            - $ref: '#/components/schemas/Customer'
+        orderItems:
+          type: array
+          minItems: 1
+          description: List of products to order (one or more products)
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        deliveryAddress:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+        billingAddress:
+          allOf:
+            - $ref: '#/components/schemas/Address'
+            - description: Billing address (optional - uses delivery address if not provided)
+        preferredDeliveryDate:
+          type: string
+          format: date
+          description: Customer's preferred delivery date
+          example: "2025-11-15"
+        preferredTimeSlot:
+          type: string
+          enum: [morning, afternoon, evening, anytime]
+          description: Preferred delivery time window
+          example: "morning"
+        installationRequired:
+          type: boolean
+          description: Whether professional installation is needed
+          default: false
+        notes:
+          type: string
+          description: Additional order notes or special instructions
+          maxLength: 1000
+          example: "Please call before delivery"
+
+    Customer:
+      type: object
+      required:
+        - customerId
+        - firstName
+        - lastName
+        - email
+        - phone
+        - dateOfBirth
+        - identificationType
+        - identificationNumber
+      description: |
+        Complete customer information required for order processing, 
+        identity verification, contract validation, and service activation.
+      properties:
+        customerId:
+          type: string
+          description: |
+            Existing customer ID for returning customers, or 'new_customer' 
+            for new customers (system will generate new ID)
+          example: "cust_12345678"
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "John"
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          description: Primary email for order confirmations, tracking updates, and service notifications
+          example: "john.doe@example.com"
+        phone:
+          allOf:
+            - $ref: '#/components/schemas/PhoneNumber'
+            - description: Primary contact phone number
+        alternatePhone:
+          allOf:
+            - $ref: '#/components/schemas/PhoneNumber'
+            - description: Alternate contact number (optional but recommended)
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth for identity verification and contract eligibility validation
+          example: "1985-06-15"
+        identificationType:
+          type: string
+          enum: [drivers_license, passport, national_id, state_id]
+          description: Type of government-issued identification for verification
+          example: "drivers_license"
+        identificationNumber:
+          type: string
+          description: Government ID number for identity verification
+          minLength: 5
+          maxLength: 50
+          example: "D1234567"
+
+    PhoneNumber:
+      type: object
+      required:
+        - countryCode
+        - number
+      properties:
+        countryCode:
+          type: string
+          description: Country calling code with + prefix
+          pattern: '^\+\d{1,3}$'
+          example: "+1"
+        number:
+          type: string
+          pattern: '^\d{10}$'
+          description: 10-digit phone number without formatting or spaces
+          example: "5551234567"
+        extension:
+          type: string
+          description: Phone extension if applicable
+          pattern: '^\d{1,6}$'
+          example: "123"
+
+    OrderItem:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: string
+          description: Product identifier from the product catalog
+          example: "prod_fiber_1gbps_bundle"
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 999
+          description: Number of units to order
+          example: 1
+        customizations:
+          type: object
+          description: |
+            Product-specific customization options. Structure varies by product type.
+            Common customizations include:
+            - Phone numbers for mobile plans
+            - Static IP for internet services
+            - Service tiers for add-ons
+          additionalProperties: true
+          example:
+            staticIPAddress: true
+            phoneNumbers: ["5551234567", "5559876543"]
+            numberPorting: true
+            previousCarrier: "OldTelecom Inc"
+
+    Address:
+      type: object
+      required:
+        - addressLine1
+        - city
+        - stateProvince
+        - postalCode
+        - country
+      properties:
+        addressLine1:
+          type: string
+          description: Street address, PO Box, company name, c/o
+          minLength: 1
+          maxLength: 200
+          example: "123 Main Street"
+        addressLine2:
+          type: string
+          description: Apartment, suite, unit, building, floor, etc.
+          maxLength: 200
+          example: "Apt 4B"
+        city:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Springfield"
+        stateProvince:
+          type: string
+          description: State or province code
+          minLength: 2
+          maxLength: 3
+          example: "IL"
+        postalCode:
+          type: string
+          description: ZIP code or postal code
+          pattern: '^\d{5}(-\d{4})?$'
+          example: "62701"
+        country:
+          type: string
+          description: ISO 3166-1 alpha-2 country code
+          pattern: '^[A-Z]{2}$'
+          example: "US"
+        deliveryInstructions:
+          type: string
+          description: Specific instructions for delivery personnel to ensure successful delivery
+          maxLength: 500
+          example: "Ring doorbell twice. If no answer, call phone number. Do not leave at door."
+
+    OrderResponse:
+      type: object
+      required:
+        - orderId
+        - orderNumber
+        - status
+        - customer
+        - orderItems
+        - deliveryAddress
+        - totalAmount
+        - createdAt
+      properties:
+        orderId:
+          type: string
+          description: Unique internal order identifier
+          example: "ord_2025_123456"
+        orderNumber:
+          type: string
+          description: Human-readable order number for customer reference
+          example: "ORD-2025-123456"
+        status:
+          type: string
+          enum: [pending, confirmed, processing, shipped, delivered, installed, cancelled, failed]
+          description: Current order status
+          example: "confirmed"
+        customer:
+          allOf:
+            - $ref: '#/components/schemas/Customer'
+        orderItems:
+          type: array
+          description: Detailed list of all ordered products
+          items:
+            $ref: '#/components/schemas/OrderItemDetail'
+        deliveryAddress:
+          $ref: '#/components/schemas/Address'
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+        scheduledDeliveryDate:
+          type: string
+          format: date
+          description: Confirmed delivery date
+          example: "2025-11-15"
+        deliveryTimeSlot:
+          type: string
+          description: Confirmed delivery time window
+          example: "morning"
+        installationScheduled:
+          type: boolean
+          description: Whether installation appointment is scheduled
+          example: true
+        installationDateTime:
+          type: string
+          format: date-time
+          description: Scheduled installation date and time
+          example: "2025-11-15T09:00:00Z"
+        totalAmount:
+          type: number
+          format: float
+          description: Total order amount including all fees, taxes, and discounts
+          example: 539.92
+        breakdown:
+          $ref: '#/components/schemas/PriceBreakdown'
+        trackingNumber:
+          type: string
+          description: Shipment tracking number for delivery tracking
+          example: "TRK20251023001"
+        estimatedActivationDate:
+          type: string
+          format: date
+          description: Estimated date when services will be activated and ready to use
+          example: "2025-11-16"
+        createdAt:
+          type: string
+          format: date-time
+          description: Order creation timestamp
+          example: "2025-10-23T10:30:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+          example: "2025-10-23T10:30:00Z"
+
+    OrderSummary:
+      type: object
+      required:
+        - orderId
+        - orderNumber
+        - status
+        - customerId
+        - customerName
+        - totalAmount
+        - orderDate
+      description: Summary information for order listing
+      properties:
+        orderId:
+          type: string
+          description: Unique internal order identifier
+          example: "ord_2025_123456"
+        orderNumber:
+          type: string
+          description: Human-readable order number
+          example: "ORD-2025-123456"
+        status:
+          type: string
+          enum: [pending, confirmed, processing, shipped, delivered, installed, cancelled, failed]
+          description: Current order status
+          example: "confirmed"
+        customerId:
+          type: string
+          description: Customer identifier
+          example: "cust_existing_12345"
+        customerName:
+          type: string
+          description: Customer full name
+          example: "Sarah Johnson"
+        totalAmount:
+          type: number
+          format: float
+          description: Total order amount
+          example: 539.92
+        orderDate:
+          type: string
+          format: date-time
+          description: Order creation date
+          example: "2025-10-23T10:30:00Z"
+        scheduledDeliveryDate:
+          type: string
+          format: date
+          description: Scheduled delivery date
+          example: "2025-11-20"
+
+    Pagination:
+      type: object
+      required:
+        - total
+        - limit
+        - offset
+      properties:
+        total:
+          type: integer
+          description: Total number of items available
+          example: 3
+        limit:
+          type: integer
+          description: Maximum items per page
+          example: 20
+        offset:
+          type: integer
+          description: Number of items skipped
+          example: 0
+
+    OrderItemDetail:
+      allOf:
+        - $ref: '#/components/schemas/OrderItem'
+        - type: object
+          required:
+            - productName
+            - unitPrice
+            - totalPrice
+          properties:
+            productName:
+              type: string
+              description: Product name for display purposes
+              example: "Fiber 1 Gbps Home Bundle"
+            unitPrice:
+              type: number
+              format: float
+              description: Price per single unit
+              example: 99.99
+            totalPrice:
+              type: number
+              format: float
+              description: Total price for this line item (unitPrice × quantity)
+              example: 99.99
+
+    PriceBreakdown:
+      type: object
+      required:
+        - subtotal
+        - total
+      properties:
+        subtotal:
+          type: number
+          format: float
+          description: Sum of all product prices before fees and taxes
+          example: 469.93
+        setupFees:
+          type: number
+          format: float
+          description: Total setup, activation, and installation fees
+          example: 49.99
+        taxes:
+          type: number
+          format: float
+          description: Total tax amount
+          example: 40.00
+        discounts:
+          type: number
+          format: float
+          description: Total discount amount (negative value)
+          example: -20.00
+        shippingFee:
+          type: number
+          format: float
+          description: Shipping and handling charges
+          example: 0.00
+        total:
+          type: number
+          format: float
+          description: Final total amount to be charged
+          example: 539.92
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code for programmatic handling
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid request parameters"
+        details:
+          type: array
+          description: Detailed field-level error information
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field path that caused the error
+                example: "customer.email"
+              issue:
+                type: string
+                description: Specific issue with the field
+                example: "Email address is already registered"
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or malformed request body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "BAD_REQUEST"
+            message: "Invalid request format"
+            details:
+              - field: "preferredTimeSlot"
+                issue: "Must be one of: morning, afternoon, evening, anytime"
+
+    NotFound:
+      description: Order not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "NOT_FOUND"
+            message: "Order with ID 'ord_2025_123456' was not found"
+
+    UnprocessableEntity:
+      description: Unprocessable entity - validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            productValidationError:
+              summary: Product validation errors
+              value:
+                code: "VALIDATION_ERROR"
+                message: "Order validation failed"
+                details:
+                  - field: "orderItems[0].productId"
+                    issue: "Product 'prod_fiber_1gbps_bundle' is not available in region 'AK'"
+                  - field: "orderItems[1].quantity"
+                    issue: "Maximum quantity for this product is 10"
+            
+            customerValidationError:
+              summary: Customer validation errors
+              value:
+                code: "VALIDATION_ERROR"
+                message: "Customer information validation failed"
+                details:
+                  - field: "customer.email"
+                    issue: "Email address is already associated with another active account"
+                  - field: "customer.dateOfBirth"
+                    issue: "Customer must be 18 years or older to create a contract"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: "INTERNAL_ERROR"
+            message: "An unexpected error occurred. Please try again later or contact support."
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token-based authentication for API access
+
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for service-to-service authentication
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
