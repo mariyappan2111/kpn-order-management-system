@@ -1,4 +1,15 @@
-# Salesforce DX Project: Next Steps
+# Overview
+A production-ready Salesforce Order Management solution that enables users to add products to orders without leaving the Order detail page. Features dual integration modes supporting both native Salesforce operations and external API integrations.
+Key Features
+
+- Available Products Component - Browse and add products from the order's pricebook
+- Order Products Component - View and manage order line items with activation workflow
+- Dual Integration Mode - Switch between Salesforce standard objects and external APIs
+- Smart Product Management - Automatic quantity increment for duplicate products
+- Order Activation - Lock orders to prevent modifications after confirmation
+- 80%+ Test Coverage - Comprehensive unit and integration tests
+- OpenAPI Specifications - Production-ready API definitions for external integrations
+- Salesforce DX Project: Next Steps
 
 Now that you’ve created a Salesforce DX project, what’s next? Here are some documentation resources to get you started.
 
