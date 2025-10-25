@@ -19,5 +19,9 @@
 		<members>Apex_Class_Permissions</members>
 		<name>PermissionSet</name>
 	</types>
+    <types>
+		<members>Order_Record_Page</members>
+		<name>FlexiPage</name>
+	</types>
     <version>60.0</version>
 </Package>
