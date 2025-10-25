@@ -94,8 +94,13 @@ public with sharing class KPN_OrderController {
             if (pricebookId == null) {
                 throw new AuraHandledException('Pricebook is not set on the order.');
             }
+            String standardPricebookId ;
+            if(test.isRunningTest()) {
+                standardPricebookId = Test.getStandardPricebookId();
+            } else {
+                standardPricebookId = [SELECT Id FROM Pricebook2 WHERE IsStandard = true LIMIT 1].Id;
+            }
             
-            String standardPricebookId = [SELECT Id FROM Pricebook2 WHERE IsStandard = true LIMIT 1].Id;
             Boolean isStandardPricebook = (pricebookId == standardPricebookId);
             List<Product2> productsToInsert = new List<Product2>();
             Map<String, OrderItemWrapper> externalProductsMap = new Map<String, OrderItemWrapper>();
@@ -279,7 +284,9 @@ public with sharing class KPN_OrderController {
             // Activate the Order
             ord.Status = 'Activated';
             update ord;
-            
+            if (orderItemsToInsert.isEmpty()) {
+                throw new AuraHandledException('No valid products found to create order items.');
+            }
             return 'Order activated successfully with ' + orderItemsToInsert.size() + ' product(s).';
             
         } catch (Exception e) {

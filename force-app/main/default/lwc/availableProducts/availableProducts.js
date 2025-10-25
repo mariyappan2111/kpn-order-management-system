@@ -35,7 +35,7 @@ export default class AvailableProducts extends LightningElement {
     @wire(MessageContext)
     messageContext;
 
-    @wire(getAvailableProducts)
+    @wire(getAvailableProducts, { orderId: '$recordId' })
     wiredProducts(result) {
         this.wiredProductsResult = result;
         const { data, error } = result;

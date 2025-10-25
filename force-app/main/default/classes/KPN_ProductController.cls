@@ -1,29 +1,29 @@
 public With sharing class KPN_ProductController {
     public static Id priceBookId;
     public static Id expricebookEntryId;
-
+    
     @AuraEnabled(cacheable=true)
-    public static List<KPN_ProductWrapper> getAvailableProducts() {
+    public static List<KPN_ProductWrapper> getAvailableProducts(String orderId) {
+       try {
         List<KPN_ProductWrapper> apiProducts = KPN_ProductsServiceController.getAvailableProducts();
-        String orderId;
+        // String orderId;
         Map<Id, AggregateResult> productOrderQuantities = new Map<Id, AggregateResult>();
         Map<Id, OrderItem> existingOrderItems = new Map<Id, OrderItem>();
         Order order = new Order();
         
-        try {
+        
             if(orderId != null) {
                 order = [SELECT Id, Pricebook2Id, Status FROM Order WHERE Id = :orderId LIMIT 1];
                 priceBookId = order.Pricebook2Id;
-                
-                for (OrderItem oi : [
-                    SELECT Id, Product2Id, Quantity 
-                    FROM OrderItem 
-                    WHERE OrderId = :orderId
-                ]) {
+                for (OrderItem oi : [SELECT Id, Product2Id, Quantity FROM OrderItem  WHERE OrderId = :orderId]) {
                     existingOrderItems.put(oi.Product2Id, oi);
                 }
             } else {
-                priceBookId = [SELECT Id FROM Pricebook2 WHERE IsStandard = true LIMIT 1].Id;
+                if(Test.isRunningTest()) {
+                    priceBookId = Test.getStandardPricebookId();
+                } else {
+                    priceBookId = [SELECT Id FROM Pricebook2 WHERE IsStandard = true LIMIT 1].Id;
+                }
                 System.debug('Standard Pricebook Id: ' + priceBookId);
             }
             
@@ -52,10 +52,13 @@ public With sharing class KPN_ProductController {
                 pw.quantityOnOrder = pw.isInOrder ? existingOrderItems.get(pbe.Product2Id).Quantity : 0;
                 productsByIdMap.put(pw.productId, pw);
             }
-
-            // Merge API products with Salesforce products
+            System.debug(apiProducts);
+            System.debug(productsByIdMap);
+            
             for (KPN_ProductWrapper apiProduct : apiProducts) {
-                if (productsByIdMap.containsKey(apiProduct.id)) {  // If exists in Salesforce, merge
+                System.debug(productsByIdMap.containsKey(apiProduct.id));
+                System.debug(apiProduct.id);
+                if (productsByIdMap.containsKey(apiProduct.id)) {
                     KPN_ProductWrapper sfProd = productsByIdMap.get(apiProduct.id);
                     sfProd.category = apiProduct.category;
                     sfProd.description = apiProduct.description;
@@ -64,7 +67,7 @@ public With sharing class KPN_ProductController {
                     products.add(sfProd);
                     productsByIdMap.remove(apiProduct.id);
                 } else {
-                    products.add(apiProduct); // Product only from API
+                    products.add(apiProduct);
                 }
             }
             // Add any Salesforce-only products that were not in API
@@ -72,77 +75,19 @@ public With sharing class KPN_ProductController {
             System.debug('Products fetched: ' + products);
             return products;
         } catch (Exception e) {
-           throw new AuraHandledException('Error fetching products: ' + e.getMessage());
-       }
+            throw new AuraHandledException('Error fetching products: ' + e.getMessage());
+        }
     }
     
-    /**
-* Add or increment product quantity on order
-*/
-    @AuraEnabled
-    public static String addProductToOrder(Id orderId, Id pricebookEntryId, Id productId) {
-        
-        if( pricebookEntryId == null ) {
-            pricebookEntryId = expricebookEntryId;
-        }
-
-        if( orderId == null ) {
-            //orderId = KPN_OrderController.createOrder();
-            throw new AuraHandledException('Order ID is required to add a product.');
-        }
-        if( productId == null ) {
-            throw new AuraHandledException('Product ID is required to add a product.');
-        }
-        Order ord = [SELECT Status FROM Order WHERE Id = :orderId LIMIT 1];
-        if (ord.Status == 'Activated') {
-            throw new AuraHandledException('Cannot modify an activated order.');
-        }
-
-        try {
-            // Check if product already exists on order
-            List<OrderItem> existingItems = [
-                SELECT Id, Quantity 
-                FROM OrderItem 
-                WHERE OrderId = :orderId 
-                AND Product2Id = :productId
-                LIMIT 1
-            ];
-            
-            if (!existingItems.isEmpty()) {
-                // Increment quantity
-                OrderItem oi = existingItems[0];
-                oi.Quantity += 1;
-                update oi;
-                return 'updated';
-            } else {
-                // Create new OrderItem
-                PricebookEntry pbe = [
-                    SELECT UnitPrice 
-                    FROM PricebookEntry 
-                    WHERE Id = :PricebookEntryId 
-                    LIMIT 1
-                ];
-                
-                OrderItem newOi = new OrderItem(
-                    OrderId = orderId,
-                    PricebookEntryId = pricebookEntryId,
-                    Product2Id = productId,
-                    Quantity = 1,
-                    UnitPrice = pbe.UnitPrice
-                );
-                insert newOi;
-                return 'created';
-            }
-            
-        } catch (Exception e) {
-            throw new AuraHandledException('Error adding product: ' + e.getMessage());
-        }
+    public static User getCurrentUser(){
+        User userObj = [select Id, FirstName, LastName From user where id=:userinfo.getuserid()];
+        return userObj;
     }
     
     // Wrapper class
     public class ProductWrapper {
         @AuraEnabled public Id productId;
-        @AuraEnabled public Id pricebookEntryId;
+        @AuraEnabled public Id pricebookEntryId; 
         @AuraEnabled public String productName;
         @AuraEnabled public Decimal listPrice;
         @AuraEnabled public Boolean isInOrder;

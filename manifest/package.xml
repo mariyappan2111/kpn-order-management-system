@@ -2,10 +2,22 @@
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
         <members>KPN_IntegrationsBase</members>
+        <members>KPN_ProductsServiceController</members>
+        <members>KPN_ProductWrapper</members>
+        <members>KPN_ProductController</members>
+        <members>KPN_OrderController</members>
+        <members>KPN_OrderServiceController</members>
+        <members>KPN_OrderItemWrapper</members>
+        <members>KPN_OrderControllerTest</members>
+        <members>KPN_ProductControllerTest</members>
+        <members>KPN_IntegrationsBase_Test</members>
+        <members>KPN_MockHttpResponse</members>
+        <members>KPN_OrderServiceController_Test</members>
         <name>ApexClass</name>
     </types>
     <types>
         <members>availableProducts</members>
+        <members>orderProducts</members>
         <name>LightningComponentBundle</name>
     </types>
     <types>

@@ -1,5 +1,6 @@
 public with sharing class KPN_ProductsServiceController extends KPN_IntegrationsBase{
     private static final String NAMED_CREDENTIAL = 'callout:Open_ExternalAPI';
+   // private static final String BASE_URL = 'https://virtserver.swaggerhub.com/go2clouds/product/1.0.0/products';
     public static List<KPN_ProductWrapper> getAvailableProducts() {
         String endpoint = NAMED_CREDENTIAL + '/product/1.0.0/products';
         HttpResponse res = sendRequest('GET', endpoint, null);

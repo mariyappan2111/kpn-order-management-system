@@ -16,6 +16,7 @@ public with sharing class KPN_ProductWrapper {
 
     public KPN_ProductWrapper(Map<String, Object> data) {
         productId = (String) data.get('id');
+        id = (String) data.get('id');
         productName = (String) data.get('name');
         category = (String) data.get('category');
         description = (String) data.get('description');
